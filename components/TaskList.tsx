@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Task } from '../types';
 import TaskCard from './TaskCard';
@@ -5,6 +6,7 @@ import TaskCard from './TaskCard';
 interface TaskListProps {
   tasks: Task[];
   isToday: boolean;
+  isEditable: boolean;
   onCompleteTask: (id: number) => void;
   onEditTask: (id: number, newText: string) => void;
   onDeleteTask: (id: number) => void;
@@ -12,7 +14,7 @@ interface TaskListProps {
   onReorderTasks: (dragIndex: number, hoverIndex: number) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, isToday, onCompleteTask, onEditTask, onDeleteTask, onCopyTask, onReorderTasks }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, isToday, isEditable, onCompleteTask, onEditTask, onDeleteTask, onCopyTask, onReorderTasks }) => {
   if (tasks.length === 0) {
     return (
       <div className="text-center text-gray-400 col-span-full py-10">
@@ -29,6 +31,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, isToday, onCompleteTask, onE
             task={task}
             index={index}
             isToday={isToday} 
+            isEditable={isEditable}
             onCompleteTask={onCompleteTask} 
             onEditTask={onEditTask}
             onDeleteTask={onDeleteTask}

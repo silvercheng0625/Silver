@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Task } from '../types';
 
@@ -5,6 +6,7 @@ interface TaskCardProps {
   task: Task;
   index: number;
   isToday: boolean;
+  isEditable: boolean;
   onCompleteTask: (id: number) => void;
   onEditTask: (id: number, newText: string) => void;
   onDeleteTask: (id: number) => void;
@@ -12,7 +14,7 @@ interface TaskCardProps {
   onReorderTasks: (dragIndex: number, hoverIndex: number) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, index, isToday, onCompleteTask, onEditTask, onDeleteTask, onCopyTask, onReorderTasks }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, index, isToday, isEditable, onCompleteTask, onEditTask, onDeleteTask, onCopyTask, onReorderTasks }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [editText, setEditText] = useState(task.text);
@@ -60,21 +62,21 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, isToday, onCompleteTas
   };
 
   const cardClasses = `bg-gray-50 p-4 rounded-2xl shadow-md transition-all duration-300 flex flex-col justify-between min-h-[160px] relative
-    ${task.completed ? 'bg-green-50' : (isToday ? 'hover:shadow-lg' : '')}
+    ${task.completed ? 'bg-green-50' : (isEditable ? 'hover:shadow-lg' : '')}
     ${isDragging ? 'opacity-50 ring-2 ring-blue-500' : ''}
-    ${isToday && !task.completed ? 'cursor-grab' : ''}
+    ${isEditable && !task.completed ? 'cursor-grab' : ''}
   `;
 
   return (
     <div 
         className={cardClasses}
-        draggable={isToday && !task.completed}
+        draggable={isEditable && !task.completed}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
     >
-      {isToday && !task.completed && <DragHandleIcon />}
+      {isEditable && !task.completed && <DragHandleIcon />}
       {isEditing ? (
         <div className="flex-grow">
           <input
@@ -103,7 +105,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, isToday, onCompleteTas
         </div>
       ) : (
         <div className="mt-4 flex justify-end items-center gap-2">
-            {isToday && !isEditing && (
+            {isEditable && !isEditing && (
                 <>
                     <button onClick={() => setIsEditing(true)} className="p-2 text-gray-500 hover:text-blue-600" aria-label="編輯任務"><PencilIcon /></button>
                     <button onClick={() => onCopyTask(task.id)} className="p-2 text-gray-500 hover:text-green-600" aria-label="複製任務"><CopyIcon /></button>
@@ -118,6 +120,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, isToday, onCompleteTas
                     className="bg-green-500 text-white font-bold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     aria-label={`完成任務: ${task.text}`}
                     disabled={!isToday}
+                    title={!isToday ? "任務只能在排定的當天完成喔！" : "完成任務"}
                  >
                     完成
                  </button>

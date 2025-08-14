@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 
 interface TaskInputProps {
   onAddTask: (taskText: string) => void;
+  isToday: boolean;
+  selectedDate: string;
 }
 
-const TaskInput: React.FC<TaskInputProps> = ({ onAddTask }) => {
+const TaskInput: React.FC<TaskInputProps> = ({ onAddTask, isToday, selectedDate }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleAddTaskClick = () => {
@@ -23,7 +25,9 @@ const TaskInput: React.FC<TaskInputProps> = ({ onAddTask }) => {
 
   return (
     <div className="bg-blue-100 p-6 rounded-2xl shadow-inner mb-8">
-      <h2 className="text-2xl font-bold text-blue-800 mb-4">新增今日任務</h2>
+      <h2 className="text-2xl font-bold text-blue-800 mb-4">
+        {isToday ? "新增今日任務" : `為 ${selectedDate} 新增任務`}
+      </h2>
       <div className="flex flex-col sm:flex-row gap-4">
         <input
           type="text"

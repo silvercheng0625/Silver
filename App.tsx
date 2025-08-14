@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Task, TasksHistory, AppData, User } from './types';
@@ -107,29 +108,31 @@ const App: React.FC = () => {
     }, []);
 
     const handleAddTask = useCallback((taskText: string) => {
-        const todayString = getTodayDateString();
+        const dateString = selectedDate;
+        if (dateString < getTodayDateString()) return;
+
         const newTask: Task = { id: Date.now(), text: taskText, completed: false, icon: "⏳" };
         
         updateUserData(user => ({
             ...user,
             tasksHistory: {
                 ...user.tasksHistory,
-                [todayString]: [...(user.tasksHistory[todayString] || []), newTask],
+                [dateString]: [...(user.tasksHistory[dateString] || []), newTask],
             },
         }));
 
         generateTaskIcon(taskText).then(icon => {
             updateUserData(user => {
-                const updatedTasks = (user.tasksHistory[todayString] || []).map(t => 
+                const updatedTasks = (user.tasksHistory[dateString] || []).map(t => 
                     t.id === newTask.id ? { ...t, icon } : t
                 );
                 return {
                     ...user,
-                    tasksHistory: { ...user.tasksHistory, [todayString]: updatedTasks },
+                    tasksHistory: { ...user.tasksHistory, [dateString]: updatedTasks },
                 };
             });
         });
-    }, [updateUserData]);
+    }, [updateUserData, selectedDate]);
 
     const handleCompleteTask = useCallback((id: number) => {
         const randomMessage = ENCOURAGEMENT_MESSAGES[Math.floor(Math.random() * ENCOURAGEMENT_MESSAGES.length)];
@@ -143,37 +146,37 @@ const App: React.FC = () => {
     }, [updateUserData]);
 
     const handleEditTask = useCallback((id: number, newText: string) => {
-        const todayString = getTodayDateString();
+        const dateString = selectedDate;
         updateUserData(user => {
-             const updatedTasks = (user.tasksHistory[todayString] || []).map(task =>
+             const updatedTasks = (user.tasksHistory[dateString] || []).map(task =>
                 task.id === id ? { ...task, text: newText, icon: "⏳" } : task
             );
-             return { ...user, tasksHistory: { ...user.tasksHistory, [todayString]: updatedTasks }};
+             return { ...user, tasksHistory: { ...user.tasksHistory, [dateString]: updatedTasks }};
         });
         
         generateTaskIcon(newText).then(icon => {
              updateUserData(user => {
-                const updatedTasks = (user.tasksHistory[todayString] || []).map(t => 
+                const updatedTasks = (user.tasksHistory[dateString] || []).map(t => 
                     t.id === id ? { ...t, icon } : t
                 );
-                return { ...user, tasksHistory: { ...user.tasksHistory, [todayString]: updatedTasks }};
+                return { ...user, tasksHistory: { ...user.tasksHistory, [dateString]: updatedTasks }};
             });
         });
-    }, [updateUserData]);
+    }, [updateUserData, selectedDate]);
 
     const handleDeleteTask = useCallback((id: number) => {
         if (!window.confirm("確定要刪除這個任務嗎？")) return;
-        const todayString = getTodayDateString();
+        const dateString = selectedDate;
         updateUserData(user => {
-            const updatedTasks = (user.tasksHistory[todayString] || []).filter(task => task.id !== id);
-            return { ...user, tasksHistory: { ...user.tasksHistory, [todayString]: updatedTasks }};
+            const updatedTasks = (user.tasksHistory[dateString] || []).filter(task => task.id !== id);
+            return { ...user, tasksHistory: { ...user.tasksHistory, [dateString]: updatedTasks }};
         });
-    }, [updateUserData]);
+    }, [updateUserData, selectedDate]);
 
     const handleCopyTask = useCallback((id: number) => {
-        const todayString = getTodayDateString();
+        const dateString = selectedDate;
         updateUserData(user => {
-            const tasks = user.tasksHistory[todayString] || [];
+            const tasks = user.tasksHistory[dateString] || [];
             const taskToCopy = tasks.find(t => t.id === id);
             if (!taskToCopy) return user;
 
@@ -187,23 +190,23 @@ const App: React.FC = () => {
             const updatedTasks = [...tasks, newTask];
             return {
                 ...user,
-                tasksHistory: { ...user.tasksHistory, [todayString]: updatedTasks },
+                tasksHistory: { ...user.tasksHistory, [dateString]: updatedTasks },
             };
         });
-    }, [updateUserData]);
+    }, [updateUserData, selectedDate]);
     
     const handleReorderTasks = useCallback((dragIndex: number, hoverIndex: number) => {
-        const todayString = getTodayDateString();
+        const dateString = selectedDate;
         updateUserData(user => {
-            const currentTasks = [...(user.tasksHistory[todayString] || [])];
+            const currentTasks = [...(user.tasksHistory[dateString] || [])];
             const [draggedItem] = currentTasks.splice(dragIndex, 1);
             currentTasks.splice(hoverIndex, 0, draggedItem);
             return {
                 ...user,
-                tasksHistory: { ...user.tasksHistory, [todayString]: currentTasks },
+                tasksHistory: { ...user.tasksHistory, [dateString]: currentTasks },
             };
         });
-    }, [updateUserData]);
+    }, [updateUserData, selectedDate]);
 
 
     const handleCloseSummary = useCallback(() => {
@@ -265,11 +268,18 @@ const App: React.FC = () => {
                         {selectedDate === getTodayDateString() ? '今日任務' : `${selectedDate} 的任務記錄`}
                     </h2>
 
-                    {selectedDate === getTodayDateString() && <TaskInput onAddTask={handleAddTask} />}
+                    {selectedDate >= getTodayDateString() && (
+                        <TaskInput 
+                            onAddTask={handleAddTask}
+                            isToday={selectedDate === getTodayDateString()}
+                            selectedDate={selectedDate}
+                        />
+                    )}
                     
                     <TaskList 
                         tasks={tasksForSelectedDate} 
                         isToday={selectedDate === getTodayDateString()}
+                        isEditable={selectedDate >= getTodayDateString()}
                         onCompleteTask={handleCompleteTask}
                         onEditTask={handleEditTask}
                         onDeleteTask={handleDeleteTask}

@@ -1,34 +1,984 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天天向上小樂園</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --color-blue-50: #eff6ff; --color-blue-100: #dbeafe; --color-blue-200: #bfdbfe; --color-blue-300: #93c5fd; --color-blue-500: #3b82f6; --color-blue-600: #2563eb; --color-blue-700: #1d4ed8; --color-blue-800: #1e40af;
+            --color-green-50: #f0fdf4; --color-green-200: #bbf7d0; --color-green-500: #22c55e; --color-green-600: #16a34a; --color-green-800: #166534;
+            --color-yellow-50: #fefce8; --color-yellow-100: #fef9c3; --color-yellow-300: #fde047; --color-yellow-500: #eab308; --color-yellow-600: #ca8a04; --color-yellow-800: #854d0e;
+            --color-gray-50: #f9fafb; --color-gray-200: #e5e7eb; --color-gray-300: #d1d5db; --color-gray-400: #9ca3af; --color-gray-500: #6b7280; --color-gray-700: #374151; --color-gray-900: #111827;
+            --color-red-600: #dc2626;
+        }
+
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f0f4f8;
+            margin: 0;
+            padding: 1rem;
         }
+        @media (min-width: 768px) {
+            body { padding: 2rem; }
+        }
+
+        button, input, select {
+            font-family: inherit;
+        }
+
+        .app-container {
+            max-width: 56rem; /* 4xl */
+            margin: auto;
+            background-color: white;
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); /* shadow-xl */
+            padding: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .app-container { padding: 2.5rem; }
+        }
+
+        /* User Selector */
+        .user-selector-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .user-selector-container select, .user-selector-container input {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--color-gray-300);
+            background-color: white;
+        }
+        .user-selector-container button {
+            background-color: var(--color-blue-500);
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .user-selector-container button:hover { background-color: var(--color-blue-600); }
+        .user-selector-container .cancel-button { background-color: var(--color-gray-200); color: black; }
+        .user-selector-container .cancel-button:hover { background-color: var(--color-gray-300); }
+
+        .welcome-box {
+            background-color: var(--color-yellow-100);
+            border-left: 4px solid var(--color-yellow-500);
+            color: var(--color-yellow-800);
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 1.5rem;
+        }
+        .welcome-box p { margin: 0; }
+        .welcome-box .font-bold { font-weight: 700; }
+        .welcome-box div { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .welcome-box input { border-color: var(--color-yellow-300); }
+        .welcome-box button { background-color: var(--color-yellow-500); }
+        .welcome-box button:hover { background-color: var(--color-yellow-600); }
+
+        /* Main Header */
+        .main-header { text-align: center; margin-bottom: 1rem; }
+        .main-header h1 {
+            font-size: 2.25rem; /* 4xl */
+            font-weight: 700;
+            color: var(--color-blue-600);
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        @media (min-width: 768px) { .main-header h1 { font-size: 3rem; } }
+        .main-header p { font-size: 1.125rem; color: var(--color-gray-500); margin: 0; }
+        @media (min-width: 768px) { .main-header p { font-size: 1.25rem; } }
+        .main-header .total-stars {
+            margin-top: 1rem;
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: var(--color-yellow-500);
+        }
+
+        /* Calendar */
+        .calendar-container {
+            background-color: var(--color-gray-50);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+            margin-bottom: 2rem;
+        }
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .calendar-header button { padding: 0.25rem 0.75rem; border: none; background: none; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        .calendar-header button:hover { background-color: var(--color-gray-200); }
+        .calendar-header h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-gray-700); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .calendar-grid .day-name { text-align: center; font-size: 0.875rem; color: var(--color-gray-500); margin-bottom: 0.5rem; }
+        .calendar-grid .day-cell { padding: 0.25rem; display: flex; justify-content: center; }
+        .calendar-grid .day-button {
+            width: 2.5rem; height: 2.5rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9999px;
+            border: none; background: none;
+            transition: background-color 0.2s, color 0.2s;
+            cursor: pointer; position: relative;
+        }
+        .calendar-grid .day-button:hover { background-color: var(--color-gray-200); }
+        .calendar-grid .day-button.today { background-color: var(--color-blue-200); color: var(--color-blue-800); }
+        .calendar-grid .day-button.selected { background-color: var(--color-blue-500); color: white; }
+        .calendar-grid .day-button .task-dot {
+            position: absolute; bottom: 0.25rem; height: 0.375rem; width: 0.375rem;
+            border-radius: 9999px;
+        }
+        .task-dot.incomplete { background-color: var(--color-yellow-500); }
+        .task-dot.complete { background-color: var(--color-green-500); }
+
+        /* Task Section */
+        .task-section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-blue-800);
+            margin-top: 1rem; margin-bottom: 1rem;
+        }
+        
+        /* Task Input */
+        .task-input-container {
+            background-color: var(--color-blue-100);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+            margin-bottom: 2rem;
+        }
+        .task-input-container h2 {
+            font-size: 1.5rem; font-weight: 700;
+            color: var(--color-blue-800); margin-top: 0; margin-bottom: 1rem;
+        }
+        .task-input-container .input-group { display: flex; flex-direction: column; gap: 1rem; }
+        @media (min-width: 640px) { .task-input-container .input-group { flex-direction: row; } }
+        .task-input-container input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 2px solid var(--color-blue-300);
+            transition: border-color 0.2s;
+        }
+        .task-input-container input:focus { outline: none; border-color: var(--color-blue-500); }
+        .task-input-container button {
+            background-color: var(--color-blue-500); color: white;
+            font-weight: 700; padding: 0.75rem 1.5rem;
+            border: none; border-radius: 0.75rem; cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: background-color 0.2s;
+        }
+        .task-input-container button:hover { background-color: var(--color-blue-600); }
+
+        /* Task List */
+        .task-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .task-list { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .task-list { grid-template-columns: repeat(3, 1fr); } }
+
+        .task-list-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--color-gray-400);
+            padding: 2.5rem 0;
+        }
+        
+        /* Task Card */
+        .task-card {
+            background-color: var(--color-gray-50);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+            display: flex; flex-direction: column; justify-content: space-between;
+            min-height: 160px;
+            position: relative;
+        }
+        .task-card.editable:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1); }
+        .task-card.completed { background-color: var(--color-green-50); }
+        .task-card.dragging { opacity: 0.5; outline: 2px dashed var(--color-blue-500); }
+        .task-card.drag-over { transform: scale(1.02); }
+        
+        .task-card .drag-handle { position: absolute; top: 0.5rem; left: 0.5rem; color: var(--color-gray-300); cursor: grab; }
+        .task-card .task-content { display: flex; align-items: flex-start; flex-grow: 1; }
+        .task-card .task-icon { font-size: 1.875rem; margin-right: 0.75rem; margin-top: 0.25rem; user-select: none; }
+        .task-card .task-text { font-size: 1.125rem; font-weight: 500; color: var(--color-gray-700); word-break: break-word; flex: 1; }
+        .task-card .edit-input { width: 100%; padding: 0.5rem; border-radius: 0.375rem; border: 2px solid var(--color-blue-300); }
+        .task-card .encouragement {
+            margin-top: 1rem; text-align: center; border-top: 2px solid var(--color-green-200); padding-top: 0.75rem;
+        }
+        .task-card .encouragement p { font-style: italic; margin-bottom: 0.25rem; font-weight: 600; color: var(--color-green-800); }
+        .task-card .encouragement span { font-size: 1.125rem; font-weight: 700; color: var(--color-green-600); }
+
+        .task-card-actions { margin-top: 1rem; display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; }
+        .task-card-actions button { border: none; background: none; padding: 0.5rem; cursor: pointer; border-radius: 9999px; }
+        .task-card-actions button svg { height: 1.25rem; width: 1.25rem; }
+        .task-card-actions .action-icon { color: var(--color-gray-500); transition: color 0.2s; }
+        .task-card-actions .action-icon:hover { color: var(--color-blue-600); }
+        .task-card-actions .action-icon.copy:hover { color: var(--color-green-600); }
+        .task-card-actions .action-icon.delete:hover { color: var(--color-red-600); }
+        
+        .task-card-actions .primary-btn {
+            color: white; font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: background-color 0.2s;
+        }
+        .task-card-actions .save-btn { background-color: var(--color-blue-500); }
+        .task-card-actions .save-btn:hover { background-color: var(--color-blue-600); }
+        .task-card-actions .complete-btn { background-color: var(--color-green-500); }
+        .task-card-actions .complete-btn:hover { background-color: var(--color-green-600); }
+        .task-card-actions .complete-btn:disabled { background-color: var(--color-gray-400); cursor: not-allowed; }
+
+        /* Modal / Overlay */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background-color: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; padding: 1rem;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            padding: 2rem;
+            max-width: 28rem;
+            width: 100%;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: modal-fade-in 0.3s forwards;
+        }
+        @keyframes modal-fade-in {
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Monthly Summary */
+        .summary-content .header { text-align: center; }
+        .summary-content .icon { font-size: 3rem; margin-bottom: 1rem; display: inline-block; }
+        .summary-content h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-gray-800); margin-bottom: 0.5rem; }
+        .summary-content p { color: var(--color-gray-500); margin-bottom: 1.5rem; }
+        .summary-content .stats { display: flex; flex-direction: column; gap: 1rem; font-size: 1.125rem; }
+        .summary-content .stat-item { display: flex; justify-content: space-between; padding: 1rem; border-radius: 0.5rem; }
+        .summary-content .stat-item span:first-child { font-weight: 600; }
+        .summary-content .stat-item span:last-child { font-weight: 700; }
+        .summary-content .stat-item.total { background-color: var(--color-blue-50); color: var(--color-blue-800); }
+        .summary-content .stat-item.completed { background-color: var(--color-green-50); color: var(--color-green-800); }
+        .summary-content .stat-item.rate { background-color: var(--color-yellow-50); color: var(--color-yellow-800); }
+        .summary-content .footer { margin-top: 2rem; text-align: center; }
+        .summary-content .footer button {
+            background-color: var(--color-blue-600); color: white;
+            font-weight: 700; padding: 0.75rem 2rem; border-radius: 9999px;
+            border: none; cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .summary-content .footer button:hover { background-color: var(--color-blue-700); transform: scale(1.05); }
+
+        /* Loading Overlay */
+        .loading-content {
+            display: flex; align-items: center; gap: 0.75rem;
+            background-color: white; padding: 1.5rem; border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .loading-spinner {
+            width: 2rem; height: 2rem;
+            border-radius: 50%;
+            border: 4px solid var(--color-gray-200);
+            border-top-color: var(--color-blue-500);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .loading-content span { font-size: 1.125rem; color: var(--color-gray-700); font-weight: 500; }
+
+        .hidden { display: none !important; }
+
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^18.2.0/",
-    "@google/genai": "https://esm.sh/@google/genai@^0.12.0",
-    "react/": "https://esm.sh/react@^18.2.0/",
-    "react": "https://esm.sh/react@^18.2.0",
-    "uuid": "https://esm.sh/uuid@9.0.1"
-  }
-}
-</script>
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^0.12.0",
+        "uuid": "https://esm.sh/uuid@9.0.1"
+      }
+    }
+    </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="p-4 md:p-8">
+<body>
+
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+        import { v4 as uuidv4 } from 'uuid';
+
+        // --- CONSTANTS & CONFIG ---
+        const LOCAL_STORAGE_KEY = 'multiUserTaskApp_vanilla';
+        const ENCOURAGEMENT_MESSAGES = [
+            "你太棒了，像個超級英雄！", "哇！又完成一項，你真是個小天才！", "好厲害！繼續加油，你是最棒的！",
+            "做得真好，給你一個大大的讚！", "任務完成！你解鎖了新的成就！"
+        ];
+        const GEMINI_MODEL = 'gemini-2.5-flash';
+
+        // --- STATE MANAGEMENT ---
+        let state = {
+            users: [],
+            currentUserId: null,
+            isLoading: true,
+            selectedDate: getTodayDateString(),
+            summaryInfo: null,
+            isEditingTask: null, // holds the id of the task being edited
+            draggedTask: {
+                id: null,
+                index: null,
+                date: null
+            },
+        };
+
+        // --- DOM ELEMENTS ---
+        const root = document.getElementById('root');
+
+        // --- GEMINI SERVICE ---
+        let ai;
+        const iconCache = {};
+
+        function initializeAi() {
+            try {
+                // This will fail if API_KEY is not set in the environment, which is expected.
+                const apiKey = process.env.API_KEY;
+                if (apiKey) {
+                    ai = new GoogleGenAI({ apiKey });
+                } else {
+                    console.warn("API_KEY is not available. AI features will be disabled.");
+                }
+            } catch (e) {
+                console.error("Failed to initialize GoogleGenAI:", e);
+                ai = null;
+            }
+        }
+        
+        async function generateTaskIcon(taskText) {
+            const defaultIcon = "✏️";
+            if (!ai) return defaultIcon;
+
+            const prompt = `為以下學習任務建議一個最相關的表情符號，只回傳表情符號本身，不要有任何其他文字： "${taskText}"`;
+            if (iconCache[prompt]) return iconCache[prompt];
+
+            try {
+                const response = await ai.models.generateContent({
+                    model: GEMINI_MODEL,
+                    contents: prompt,
+                    config: { temperature: 0.2 }
+                });
+                const emoji = response.text.trim();
+                if (emoji && /\p{Emoji}/u.test(emoji)) {
+                    iconCache[prompt] = emoji;
+                    return emoji;
+                }
+                return defaultIcon;
+            } catch (error) {
+                console.error("Gemini API call for icon failed:", error);
+                return defaultIcon;
+            }
+        }
+        
+        // --- DATE UTILS ---
+        function getTodayDateString() {
+            return new Date().toLocaleDateString('sv-SE');
+        }
+        function getMonthName(monthIndex) {
+            const names = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+            return names[monthIndex];
+        }
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+        function getFirstDayOfMonth(year, month) {
+            return new Date(year, month, 1).getDay();
+        }
+        function getPreviousMonthInfo(date) {
+            const prevMonthDate = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+            return { year: prevMonthDate.getFullYear(), month: prevMonthDate.getMonth() };
+        }
+
+        // --- CORE LOGIC ---
+        function saveState() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ users: state.users, currentUserId: state.currentUserId }));
+            } catch (e) {
+                console.error("Failed to save state to localStorage", e);
+            }
+        }
+
+        function loadState() {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedData) {
+                    const parsed = JSON.parse(storedData);
+                    state.users = parsed.users || [];
+                    state.currentUserId = parsed.currentUserId || (state.users.length > 0 ? state.users[0].id : null);
+                }
+            } catch (e) {
+                console.error("Failed to load state from localStorage", e);
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+            state.isLoading = false;
+        }
+
+        function getCurrentUser() {
+            return state.users.find(u => u.id === state.currentUserId);
+        }
+
+        function updateUserData(updateFn) {
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+            const updatedUser = updateFn(JSON.parse(JSON.stringify(currentUser))); // Deep copy to avoid mutation issues
+            state.users = state.users.map(u => u.id === state.currentUserId ? updatedUser : u);
+            saveState();
+        }
+        
+        function setState(newState) {
+            Object.assign(state, newState);
+            renderApp();
+        }
+
+        // --- RENDER FUNCTIONS ---
+
+        function renderApp() {
+            const currentUser = getCurrentUser();
+            const appHtml = `
+                ${state.isLoading ? renderLoadingOverlay(true) : ''}
+                ${state.summaryInfo ? renderMonthlySummary(state.summaryInfo) : ''}
+                <div class="app-container">
+                    ${renderUserSelector(state.users, state.currentUserId)}
+                    ${renderHeader(currentUser)}
+                    ${currentUser ? renderMainContent(currentUser) : ''}
+                </div>
+            `;
+            root.innerHTML = appHtml;
+        }
+
+        function renderLoadingOverlay(isLoading) {
+            if (!isLoading) return '';
+            return `
+                <div class="modal-overlay" id="loading-overlay">
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <span>AI 助手正在努力思考中...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMonthlySummary({ tasks, year, month }) {
+            const completedTasks = tasks.filter(t => t.completed);
+            const totalTasks = tasks.length;
+            const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
+            
+            return `
+                <div class="modal-overlay" data-action="close-summary">
+                    <div class="modal-content summary-content" onclick="event.stopPropagation()">
+                        <div class="header">
+                            <span class="icon">🏆</span>
+                            <h2 id="summary-title">${year}年 ${getMonthName(month)} 任務總結</h2>
+                            <p>回顧上個月的努力成果！</p>
+                        </div>
+                        <div class="stats">
+                            <div class="stat-item total"><span>總任務數:</span><span>${totalTasks} 項</span></div>
+                            <div class="stat-item completed"><span>已完成任務:</span><span>${completedTasks.length} 項</span></div>
+                            <div class="stat-item rate"><span>完成率:</span><span>${completionRate}%</span></div>
+                        </div>
+                        <div class="footer">
+                            <button data-action="close-summary">繼續加油！</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderUserSelector(users, currentUserId) {
+            if (users.length === 0) {
+                return `
+                    <div class="welcome-box">
+                        <p class="font-bold">歡迎來到小樂園！</p>
+                        <p>請先建立一位使用者來開始記錄任務吧。</p>
+                        <form data-action="add-user-form">
+                            <div>
+                                <input type="text" id="initial-user-name" placeholder="請輸入使用者名稱" required>
+                                <button type="submit">建立</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="user-selector-container">
+                    <select id="user-selector" data-action="switch-user">
+                        ${users.map(user => `<option value="${user.id}" ${user.id === currentUserId ? 'selected' : ''}>${user.name}</option>`).join('')}
+                    </select>
+                    <form data-action="add-user-form" class="hidden" id="add-user-group">
+                        <input type="text" id="new-user-name" placeholder="新使用者名稱" required>
+                        <button type="submit">新增</button>
+                        <button type="button" class="cancel-button" data-action="toggle-add-user-form">取消</button>
+                    </form>
+                    <button id="show-add-user-btn" data-action="toggle-add-user-form">+ 新增使用者</button>
+                </div>
+            `;
+        }
+
+        function renderHeader(currentUser) {
+            const totalStars = currentUser ? Object.values(currentUser.tasksHistory || {}).flat().filter(t => t.completed).length : 0;
+            return `
+                <div class="main-header">
+                    <h1>天天向上小樂園</h1>
+                    <p>${currentUser ? `${currentUser.name}的專屬任務板！` : "請選擇或新增一位使用者"}</p>
+                    ${currentUser ? `<p class="total-stars" aria-label="總計 ${totalStars} 顆星星">⭐ 總計: ${totalStars}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function renderMainContent(currentUser) {
+            const todayString = getTodayDateString();
+            const isTodaySelected = state.selectedDate === todayString;
+            const isFutureSelected = state.selectedDate > todayString;
+            const tasksForSelectedDate = currentUser.tasksHistory?.[state.selectedDate] || [];
+
+            return `
+                ${renderCalendar(currentUser.tasksHistory || {})}
+                <div class="task-section">
+                    <h2>${isTodaySelected ? '今日任務' : `${state.selectedDate} 的任務記錄`}</h2>
+                    ${state.selectedDate >= todayString ? renderTaskInput(isTodaySelected, state.selectedDate) : ''}
+                    ${renderTaskList(tasksForSelectedDate, isTodaySelected, state.selectedDate >= todayString)}
+                </div>
+            `;
+        }
+
+        function renderCalendar(tasksHistory) {
+            const displayDate = new Date(state.selectedDate);
+            const year = displayDate.getFullYear();
+            const month = displayDate.getMonth();
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month);
+            const todayString = getTodayDateString();
+
+            let dayCells = '';
+            for (let i = 0; i < firstDay; i++) {
+                dayCells += `<div class="day-cell"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isSelected = dateString === state.selectedDate;
+                const isToday = dateString === todayString;
+                const hasTasks = tasksHistory[dateString]?.length > 0;
+                const hasCompletedTasks = hasTasks && tasksHistory[dateString].every(t => t.completed);
+
+                dayCells += `
+                    <div class="day-cell">
+                        <button data-action="select-date" data-date="${dateString}" class="day-button ${isSelected ? 'selected' : ''} ${!isSelected && isToday ? 'today' : ''}">
+                            ${day}
+                            ${hasTasks ? `<span class="task-dot ${hasCompletedTasks ? 'complete' : 'incomplete'}"></span>` : ''}
+                        </button>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button data-action="change-month" data-offset="-1">&lt;</button>
+                        <h3>${year}年 ${getMonthName(month)}</h3>
+                        <button data-action="change-month" data-offset="1">&gt;</button>
+                    </div>
+                    <div class="calendar-grid">
+                        ${['日', '一', '二', '三', '四', '五', '六'].map(d => `<div class="day-name">${d}</div>`).join('')}
+                        ${dayCells}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderTaskInput(isToday, selectedDate) {
+            return `
+                <div class="task-input-container">
+                    <h2>${isToday ? "新增今日任務" : `為 ${selectedDate} 新增任務`}</h2>
+                    <form data-action="add-task-form">
+                        <div class="input-group">
+                            <input type="text" id="task-input-field" placeholder="例如: 閱讀故事書30分鐘" required>
+                            <button type="submit">新增任務</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderTaskList(tasks, isToday, isEditable) {
+            if (tasks.length === 0) {
+                return `<div class="task-list-empty">${isToday ? '今天還沒有任務喔，快來新增吧！' : '這一天沒有記錄任何任務。'}</div>`;
+            }
+            return `<div class="task-list" data-date="${state.selectedDate}">${tasks.map((task, index) => renderTaskCard(task, index, isToday, isEditable)).join('')}</div>`;
+        }
+
+        function renderTaskCard(task, index, isToday, isEditable) {
+            const isEditingThisTask = state.isEditingTask === task.id;
+            
+            return `
+            <div 
+                class="task-card ${task.completed ? 'completed' : ''} ${isEditable ? 'editable' : ''}" 
+                data-task-id="${task.id}" 
+                data-task-index="${index}"
+                draggable="${isEditable && !task.completed}"
+            >
+                ${isEditable && !task.completed ? `
+                    <div class="drag-handle" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg>
+                    </div>
+                ` : ''}
+
+                ${isEditingThisTask ? `
+                    <div class="flex-grow">
+                        <input type="text" class="edit-input" value="${task.text}" data-action="edit-input" data-task-id="${task.id}" autofocus>
+                    </div>
+                ` : `
+                    <div class="task-content">
+                        <span class="task-icon">${task.icon || '✏️'}</span>
+                        <p class="task-text">${task.text}</p>
+                    </div>
+                `}
+
+                ${task.completed ? `
+                    <div class="encouragement">
+                        <p>"${task.encouragement || '做得好！'}"</p>
+                        <span>太棒了！🎉</span>
+                    </div>
+                ` : `
+                    <div class="task-card-actions">
+                        ${isEditable && !isEditingThisTask ? `
+                            <button class="action-icon" data-action="edit-task" data-task-id="${task.id}" aria-label="編輯任務"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                            <button class="action-icon copy" data-action="copy-task" data-task-id="${task.id}" aria-label="複製任務"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" /><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></button>
+                            <button class="action-icon delete" data-action="delete-task" data-task-id="${task.id}" aria-label="刪除任務"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        ` : ''}
+                        ${isEditingThisTask ? `
+                            <button class="primary-btn save-btn" data-action="save-edit" data-task-id="${task.id}">儲存</button>
+                        ` : `
+                            <button class="primary-btn complete-btn" data-action="complete-task" data-task-id="${task.id}" ${!isToday ? 'disabled' : ''} title="${!isToday ? '任務只能在排定的當天完成喔！' : '完成任務'}">完成</button>
+                        `}
+                    </div>
+                `}
+            </div>
+            `;
+        }
+
+        // --- EVENT HANDLERS & ACTIONS ---
+        function handleAction(e) {
+            const target = e.target;
+            const actionTarget = target.closest('[data-action]');
+            if (!actionTarget) return;
+
+            const { action, date, offset, taskId, taskIndex } = actionTarget.dataset;
+
+            switch (action) {
+                case 'switch-user':
+                    switchUser(target.value);
+                    break;
+                case 'toggle-add-user-form':
+                    toggleAddUserForm();
+                    break;
+                case 'select-date':
+                    selectDate(date);
+                    break;
+                case 'change-month':
+                    changeMonth(parseInt(offset));
+                    break;
+                case 'edit-task':
+                    setState({ isEditingTask: parseInt(taskId) });
+                    break;
+                case 'save-edit':
+                    saveTaskEdit(parseInt(taskId));
+                    break;
+                case 'complete-task':
+                    completeTask(parseInt(taskId));
+                    break;
+                case 'copy-task':
+                    copyTask(parseInt(taskId));
+                    break;
+                case 'delete-task':
+                    deleteTask(parseInt(taskId));
+                    break;
+                case 'close-summary':
+                    closeSummary();
+                    break;
+            }
+        }
+        
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const action = form.dataset.action;
+
+            if (action === 'add-user-form') {
+                const input = form.querySelector('input');
+                if (input.value.trim()) {
+                    addUser(input.value.trim());
+                    input.value = '';
+                }
+            } else if (action === 'add-task-form') {
+                const input = form.querySelector('#task-input-field');
+                if (input.value.trim()) {
+                    addTask(input.value.trim());
+                    input.value = '';
+                }
+            }
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && e.target.dataset.action === 'edit-input') {
+                saveTaskEdit(parseInt(e.target.dataset.taskId));
+            } else if (e.key === 'Escape' && e.target.dataset.action === 'edit-input') {
+                setState({ isEditingTask: null });
+            }
+        }
+
+        function handleDragAndDrop(e) {
+            const taskCard = e.target.closest('[data-task-id]');
+            if (!taskCard || !taskCard.draggable) return;
+
+            switch (e.type) {
+                case 'dragstart':
+                    state.draggedTask = {
+                        id: parseInt(taskCard.dataset.taskId),
+                        index: parseInt(taskCard.dataset.taskIndex),
+                        date: e.currentTarget.dataset.date,
+                    };
+                    e.dataTransfer.effectAllowed = 'move';
+                    taskCard.classList.add('dragging');
+                    break;
+                case 'dragend':
+                    taskCard.classList.remove('dragging');
+                    state.draggedTask = { id: null, index: null, date: null };
+                    break;
+                case 'dragover':
+                    e.preventDefault(); // Necessary to allow drop
+                    const hoverCard = e.target.closest('[data-task-id]');
+                    if (hoverCard && hoverCard !== taskCard) {
+                        hoverCard.classList.add('drag-over');
+                    }
+                    break;
+                case 'dragleave':
+                     const leftCard = e.target.closest('[data-task-id]');
+                     if (leftCard) leftCard.classList.remove('drag-over');
+                    break;
+                case 'drop':
+                    e.preventDefault();
+                    const dropTargetCard = e.target.closest('[data-task-id]');
+                    if (dropTargetCard) {
+                        dropTargetCard.classList.remove('drag-over');
+                        const hoverIndex = parseInt(dropTargetCard.dataset.taskIndex);
+                        if (state.draggedTask.index !== null && state.draggedTask.index !== hoverIndex) {
+                            reorderTasks(state.draggedTask.index, hoverIndex);
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        // --- ACTIONS ---
+        function addUser(name) {
+            const newUser = { id: uuidv4(), name, tasksHistory: {} };
+            state.users.push(newUser);
+            state.currentUserId = newUser.id;
+            saveState();
+            toggleAddUserForm(false);
+            renderApp();
+        }
+
+        function switchUser(userId) {
+            setState({ currentUserId: userId, selectedDate: getTodayDateString() });
+        }
+
+        function toggleAddUserForm(show) {
+            const form = document.getElementById('add-user-group');
+            const button = document.getElementById('show-add-user-btn');
+            const shouldShow = show === undefined ? form.classList.contains('hidden') : show;
+
+            form.classList.toggle('hidden', !shouldShow);
+            button.classList.toggle('hidden', shouldShow);
+            if(shouldShow) form.querySelector('input')?.focus();
+        }
+
+        function selectDate(date) {
+            setState({ selectedDate: date });
+        }
+        
+        function changeMonth(offset) {
+            const newDate = new Date(state.selectedDate);
+            newDate.setMonth(newDate.getMonth() + offset, 1);
+            setState({ selectedDate: newDate.toLocaleDateString('sv-SE') });
+        }
+
+        async function addTask(text) {
+            const dateString = state.selectedDate;
+            if (dateString < getTodayDateString()) return;
+
+            const newTask = { id: Date.now(), text, completed: false, icon: "⏳" };
+            
+            updateUserData(user => {
+                user.tasksHistory = user.tasksHistory || {};
+                user.tasksHistory[dateString] = [...(user.tasksHistory[dateString] || []), newTask];
+                return user;
+            });
+            renderApp(); // Render immediately with placeholder icon
+            
+            const icon = await generateTaskIcon(text);
+            updateUserData(user => {
+                const tasks = user.tasksHistory[dateString] || [];
+                const taskToUpdate = tasks.find(t => t.id === newTask.id);
+                if (taskToUpdate) taskToUpdate.icon = icon;
+                return user;
+            });
+            renderApp(); // Re-render with the fetched icon
+        }
+
+        function completeTask(taskId) {
+            const randomMessage = ENCOURAGEMENT_MESSAGES[Math.floor(Math.random() * ENCOURAGEMENT_MESSAGES.length)];
+            const todayString = getTodayDateString();
+            updateUserData(user => {
+                const tasks = user.tasksHistory[todayString] || [];
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = true;
+                    task.encouragement = randomMessage;
+                }
+                return user;
+            });
+            renderApp();
+        }
+
+        async function saveTaskEdit(taskId) {
+            const input = document.querySelector(`input[data-task-id="${taskId}"]`);
+            if (!input) return;
+            const newText = input.value.trim();
+
+            updateUserData(user => {
+                const tasks = user.tasksHistory[state.selectedDate] || [];
+                const task = tasks.find(t => t.id === taskId);
+                if (task && newText && task.text !== newText) {
+                    task.text = newText;
+                    task.icon = "⏳";
+                }
+                return user;
+            });
+            setState({ isEditingTask: null }); // This will trigger a re-render
+
+            const icon = await generateTaskIcon(newText);
+            updateUserData(user => {
+                const task = (user.tasksHistory[state.selectedDate] || []).find(t => t.id === taskId);
+                if (task) task.icon = icon;
+                return user;
+            });
+            renderApp();
+        }
+
+        function deleteTask(taskId) {
+            if (!window.confirm("確定要刪除這個任務嗎？")) return;
+            updateUserData(user => {
+                user.tasksHistory[state.selectedDate] = (user.tasksHistory[state.selectedDate] || []).filter(t => t.id !== taskId);
+                return user;
+            });
+            renderApp();
+        }
+        
+        function copyTask(taskId) {
+             updateUserData(user => {
+                const tasks = user.tasksHistory[state.selectedDate] || [];
+                const taskToCopy = tasks.find(t => t.id === taskId);
+                if (taskToCopy) {
+                    const newTask = { ...taskToCopy, id: Date.now(), completed: false, encouragement: undefined };
+                    tasks.push(newTask);
+                }
+                return user;
+            });
+            renderApp();
+        }
+
+        function reorderTasks(dragIndex, hoverIndex) {
+            updateUserData(user => {
+                const tasks = user.tasksHistory[state.selectedDate] || [];
+                const [draggedItem] = tasks.splice(dragIndex, 1);
+                tasks.splice(hoverIndex, 0, draggedItem);
+                return user;
+            });
+            renderApp();
+        }
+        
+        function closeSummary() {
+            const today = new Date();
+            const currentMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
+            updateUserData(user => {
+                user.lastSeenSummaryMonth = currentMonthKey;
+                return user;
+            });
+            setState({ summaryInfo: null });
+        }
+
+        function checkForMonthlySummary() {
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            const today = new Date();
+            const currentMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
+            if (currentUser.lastSeenSummaryMonth === currentMonthKey) return;
+            
+            const { year, month } = getPreviousMonthInfo(today);
+            const lastMonthTasks = Object.entries(currentUser.tasksHistory || {})
+                .filter(([dateStr]) => {
+                    const taskDate = new Date(dateStr);
+                    return taskDate.getFullYear() === year && taskDate.getMonth() === month;
+                })
+                .flatMap(([, tasks]) => tasks);
+
+            if (lastMonthTasks.length > 0) {
+                state.summaryInfo = { tasks: lastMonthTasks, year, month };
+            } else {
+                 updateUserData(user => ({...user, lastSeenSummaryMonth: currentMonthKey }));
+                 saveState();
+            }
+        }
+
+        // --- INITIALIZATION ---
+        function init() {
+            initializeAi();
+            loadState();
+            checkForMonthlySummary();
+            renderApp();
+
+            root.addEventListener('click', handleAction);
+            root.addEventListener('change', handleAction);
+            root.addEventListener('submit', handleFormSubmit);
+            root.addEventListener('keydown', handleKeyDown);
+            
+            // Event delegation for drag and drop
+            root.addEventListener('dragstart', handleDragAndDrop);
+            root.addEventListener('dragend', handleDragAndDrop);
+            root.addEventListener('dragover', handleDragAndDrop);
+            root.addEventListener('dragleave', handleDragAndDrop);
+            root.addEventListener('drop', handleDragAndDrop);
+        }
+
+        init();
+    </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

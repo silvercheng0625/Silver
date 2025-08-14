@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -140,11 +139,41 @@
         .task-dot.complete { background-color: var(--color-green-500); }
 
         /* Task Section */
+        .task-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
         .task-section h2 {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--color-blue-800);
-            margin-top: 1rem; margin-bottom: 1rem;
+            margin: 0;
+        }
+        .sort-toggle-btn {
+            background-color: var(--color-blue-100);
+            color: var(--color-blue-700);
+            border: 1px solid var(--color-blue-300);
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .sort-toggle-btn:hover {
+            background-color: var(--color-blue-200);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .sort-toggle-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
         }
         
         /* Task Input */
@@ -200,17 +229,19 @@
             padding: 1rem;
             border-radius: 1rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            transition: box-shadow 0.3s, transform 0.3s;
+            transition: box-shadow 0.3s, transform 0.3s, background-color 0.3s, border-color 0.3s;
             display: flex; flex-direction: column; justify-content: space-between;
             min-height: 160px;
             position: relative;
+            border: 2px solid transparent;
         }
         .task-card.editable:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1); }
         .task-card.completed { background-color: var(--color-green-50); }
-        .task-card.dragging { opacity: 0.5; outline: 2px dashed var(--color-blue-500); }
-        .task-card.drag-over { transform: scale(1.02); }
+        .task-card.is-sorting {
+            border-color: var(--color-blue-300);
+            background-color: var(--color-blue-50);
+        }
         
-        .task-card .drag-handle { position: absolute; top: 0.5rem; left: 0.5rem; color: var(--color-gray-300); cursor: grab; }
         .task-card .task-content { display: flex; align-items: flex-start; flex-grow: 1; }
         .task-card .task-icon { font-size: 1.875rem; margin-right: 0.75rem; margin-top: 0.25rem; user-select: none; }
         .task-card .task-text { font-size: 1.125rem; font-weight: 500; color: var(--color-gray-700); word-break: break-word; flex: 1; }
@@ -228,6 +259,15 @@
         .task-card-actions .action-icon:hover { color: var(--color-blue-600); }
         .task-card-actions .action-icon.copy:hover { color: var(--color-green-600); }
         .task-card-actions .action-icon.delete:hover { color: var(--color-red-600); }
+        .task-card-actions .action-icon[disabled] { color: var(--color-gray-300); cursor: not-allowed; }
+        .task-card-actions .action-icon[disabled]:hover { color: var(--color-gray-300); background-color: transparent; }
+
+        .task-card-actions .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
         
         .task-card-actions .primary-btn {
             color: white; font-weight: 700;
@@ -339,11 +379,7 @@
             selectedDate: getTodayDateString(),
             summaryInfo: null,
             isEditingTask: null, // holds the id of the task being edited
-            draggedTask: {
-                id: null,
-                index: null,
-                date: null
-            },
+            isSorting: false,
         };
 
         // --- DOM ELEMENTS ---
@@ -552,15 +588,25 @@
         function renderMainContent(currentUser) {
             const todayString = getTodayDateString();
             const isTodaySelected = state.selectedDate === todayString;
-            const isFutureSelected = state.selectedDate > todayString;
             const tasksForSelectedDate = currentUser.tasksHistory?.[state.selectedDate] || [];
+            const isEditable = state.selectedDate >= todayString;
 
             return `
                 ${renderCalendar(currentUser.tasksHistory || {})}
                 <div class="task-section">
-                    <h2>${isTodaySelected ? '今日任務' : `${state.selectedDate} 的任務記錄`}</h2>
-                    ${state.selectedDate >= todayString ? renderTaskInput(isTodaySelected, state.selectedDate) : ''}
-                    ${renderTaskList(tasksForSelectedDate, isTodaySelected, state.selectedDate >= todayString)}
+                    <div class="task-section-header">
+                        <h2>${isTodaySelected ? '今日任務' : `${state.selectedDate} 的任務記錄`}</h2>
+                        ${isEditable && tasksForSelectedDate.filter(t => !t.completed).length > 1 ? `
+                            <button class="sort-toggle-btn" data-action="toggle-sort">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+                                </svg>
+                                ${state.isSorting ? '完成排序' : '排序任務'}
+                            </button>
+                        ` : ''}
+                    </div>
+                    ${isEditable ? renderTaskInput(isTodaySelected, state.selectedDate) : ''}
+                    ${renderTaskList(tasksForSelectedDate, isTodaySelected, isEditable)}
                 </div>
             `;
         }
@@ -611,6 +657,7 @@
         }
         
         function renderTaskInput(isToday, selectedDate) {
+            if (state.isSorting) return ''; // Hide input when sorting
             return `
                 <div class="task-input-container">
                     <h2>${isToday ? "新增今日任務" : `為 ${selectedDate} 新增任務`}</h2>
@@ -628,25 +675,19 @@
             if (tasks.length === 0) {
                 return `<div class="task-list-empty">${isToday ? '今天還沒有任務喔，快來新增吧！' : '這一天沒有記錄任何任務。'}</div>`;
             }
-            return `<div class="task-list" data-date="${state.selectedDate}">${tasks.map((task, index) => renderTaskCard(task, index, isToday, isEditable)).join('')}</div>`;
+            return `<div class="task-list">${tasks.map((task, index) => renderTaskCard(task, index, isToday, isEditable)).join('')}</div>`;
         }
 
         function renderTaskCard(task, index, isToday, isEditable) {
             const isEditingThisTask = state.isEditingTask === task.id;
+            const totalTasks = (getCurrentUser().tasksHistory?.[state.selectedDate] || []).length;
             
             return `
             <div 
-                class="task-card ${task.completed ? 'completed' : ''} ${isEditable ? 'editable' : ''}" 
+                class="task-card ${task.completed ? 'completed' : ''} ${isEditable ? 'editable' : ''} ${state.isSorting ? 'is-sorting' : ''}" 
                 data-task-id="${task.id}" 
                 data-task-index="${index}"
-                draggable="${isEditable && !task.completed}"
             >
-                ${isEditable && !task.completed ? `
-                    <div class="drag-handle" aria-hidden="true">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg>
-                    </div>
-                ` : ''}
-
                 ${isEditingThisTask ? `
                     <div class="flex-grow">
                         <input type="text" class="edit-input" value="${task.text}" data-action="edit-input" data-task-id="${task.id}" autofocus>
@@ -665,6 +706,16 @@
                     </div>
                 ` : `
                     <div class="task-card-actions">
+                    ${ isEditable && state.isSorting && !isEditingThisTask ? `
+                        <div class="sort-controls">
+                            <button class="action-icon" data-action="move-task" data-direction="up" data-task-index="${index}" ${index === 0 ? 'disabled' : ''} aria-label="上移任務">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button class="action-icon" data-action="move-task" data-direction="down" data-task-index="${index}" ${index >= totalTasks - 1 ? 'disabled' : ''} aria-label="下移任務">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    ` : `
                         ${isEditable && !isEditingThisTask ? `
                             <button class="action-icon" data-action="edit-task" data-task-id="${task.id}" aria-label="編輯任務"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
                             <button class="action-icon copy" data-action="copy-task" data-task-id="${task.id}" aria-label="複製任務"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" /><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></button>
@@ -675,6 +726,7 @@
                         ` : `
                             <button class="primary-btn complete-btn" data-action="complete-task" data-task-id="${task.id}" ${!isToday ? 'disabled' : ''} title="${!isToday ? '任務只能在排定的當天完成喔！' : '完成任務'}">完成</button>
                         `}
+                    `}
                     </div>
                 `}
             </div>
@@ -687,7 +739,7 @@
             const actionTarget = target.closest('[data-action]');
             if (!actionTarget) return;
 
-            const { action, date, offset, taskId, taskIndex } = actionTarget.dataset;
+            const { action, date, offset, taskId } = actionTarget.dataset;
 
             switch (action) {
                 case 'switch-user':
@@ -703,7 +755,7 @@
                     changeMonth(parseInt(offset));
                     break;
                 case 'edit-task':
-                    setState({ isEditingTask: parseInt(taskId) });
+                    setState({ isEditingTask: parseInt(taskId), isSorting: false });
                     break;
                 case 'save-edit':
                     saveTaskEdit(parseInt(taskId));
@@ -719,6 +771,14 @@
                     break;
                 case 'close-summary':
                     closeSummary();
+                    break;
+                case 'toggle-sort':
+                    toggleSort();
+                    break;
+                case 'move-task':
+                    const direction = actionTarget.dataset.direction;
+                    const taskIndex = parseInt(actionTarget.closest('[data-task-index]').dataset.taskIndex);
+                    moveTask(taskIndex, direction);
                     break;
             }
         }
@@ -751,49 +811,6 @@
             }
         }
 
-        function handleDragAndDrop(e) {
-            const taskCard = e.target.closest('[data-task-id]');
-            if (!taskCard || !taskCard.draggable) return;
-
-            switch (e.type) {
-                case 'dragstart':
-                    state.draggedTask = {
-                        id: parseInt(taskCard.dataset.taskId),
-                        index: parseInt(taskCard.dataset.taskIndex),
-                        date: e.currentTarget.dataset.date,
-                    };
-                    e.dataTransfer.effectAllowed = 'move';
-                    taskCard.classList.add('dragging');
-                    break;
-                case 'dragend':
-                    taskCard.classList.remove('dragging');
-                    state.draggedTask = { id: null, index: null, date: null };
-                    break;
-                case 'dragover':
-                    e.preventDefault(); // Necessary to allow drop
-                    const hoverCard = e.target.closest('[data-task-id]');
-                    if (hoverCard && hoverCard !== taskCard) {
-                        hoverCard.classList.add('drag-over');
-                    }
-                    break;
-                case 'dragleave':
-                     const leftCard = e.target.closest('[data-task-id]');
-                     if (leftCard) leftCard.classList.remove('drag-over');
-                    break;
-                case 'drop':
-                    e.preventDefault();
-                    const dropTargetCard = e.target.closest('[data-task-id]');
-                    if (dropTargetCard) {
-                        dropTargetCard.classList.remove('drag-over');
-                        const hoverIndex = parseInt(dropTargetCard.dataset.taskIndex);
-                        if (state.draggedTask.index !== null && state.draggedTask.index !== hoverIndex) {
-                            reorderTasks(state.draggedTask.index, hoverIndex);
-                        }
-                    }
-                    break;
-            }
-        }
-        
         // --- ACTIONS ---
         function addUser(name) {
             const newUser = { id: uuidv4(), name, tasksHistory: {} };
@@ -805,12 +822,14 @@
         }
 
         function switchUser(userId) {
-            setState({ currentUserId: userId, selectedDate: getTodayDateString() });
+            setState({ currentUserId: userId, selectedDate: getTodayDateString(), isSorting: false });
         }
 
         function toggleAddUserForm(show) {
             const form = document.getElementById('add-user-group');
             const button = document.getElementById('show-add-user-btn');
+            if (!form || !button) return; // FIX: Prevent error if elements don't exist
+            
             const shouldShow = show === undefined ? form.classList.contains('hidden') : show;
 
             form.classList.toggle('hidden', !shouldShow);
@@ -819,13 +838,13 @@
         }
 
         function selectDate(date) {
-            setState({ selectedDate: date });
+            setState({ selectedDate: date, isSorting: false });
         }
         
         function changeMonth(offset) {
             const newDate = new Date(state.selectedDate);
             newDate.setMonth(newDate.getMonth() + offset, 1);
-            setState({ selectedDate: newDate.toLocaleDateString('sv-SE') });
+            setState({ selectedDate: newDate.toLocaleDateString('sv-SE'), isSorting: false });
         }
 
         async function addTask(text) {
@@ -871,6 +890,8 @@
             if (!input) return;
             const newText = input.value.trim();
 
+            setState({ isEditingTask: null }); // Trigger re-render to show loading state if needed
+
             updateUserData(user => {
                 const tasks = user.tasksHistory[state.selectedDate] || [];
                 const task = tasks.find(t => t.id === taskId);
@@ -880,7 +901,7 @@
                 }
                 return user;
             });
-            setState({ isEditingTask: null }); // This will trigger a re-render
+            renderApp();
 
             const icon = await generateTaskIcon(newText);
             updateUserData(user => {
@@ -912,10 +933,20 @@
             });
             renderApp();
         }
+        
+        function toggleSort() {
+            setState({ isSorting: !state.isSorting, isEditingTask: null });
+        }
+
+        function moveTask(taskIndex, direction) {
+            const newIndex = direction === 'up' ? taskIndex - 1 : taskIndex + 1;
+            reorderTasks(taskIndex, newIndex);
+        }
 
         function reorderTasks(dragIndex, hoverIndex) {
             updateUserData(user => {
                 const tasks = user.tasksHistory[state.selectedDate] || [];
+                if (dragIndex < 0 || dragIndex >= tasks.length || hoverIndex < 0 || hoverIndex >= tasks.length) return user;
                 const [draggedItem] = tasks.splice(dragIndex, 1);
                 tasks.splice(hoverIndex, 0, draggedItem);
                 return user;
@@ -968,13 +999,6 @@
             root.addEventListener('change', handleAction);
             root.addEventListener('submit', handleFormSubmit);
             root.addEventListener('keydown', handleKeyDown);
-            
-            // Event delegation for drag and drop
-            root.addEventListener('dragstart', handleDragAndDrop);
-            root.addEventListener('dragend', handleDragAndDrop);
-            root.addEventListener('dragover', handleDragAndDrop);
-            root.addEventListener('dragleave', handleDragAndDrop);
-            root.addEventListener('drop', handleDragAndDrop);
         }
 
         init();

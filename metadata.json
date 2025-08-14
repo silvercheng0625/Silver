@@ -1,0 +1,5 @@
+{
+  "name": "天天向上小樂園",
+  "description": "一個支援多使用者、可編輯任務、AI自動生成圖標並提供月度總結的每日任務打卡應用。",
+  "requestFramePermissions": []
+}
